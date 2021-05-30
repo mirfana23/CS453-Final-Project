@@ -40,4 +40,3 @@ class ScriptRunner():
         ret_code = self.run(args)
         (ret_cov, total_cov) = self.check_cov()
         return (ret_code, ret_cov, total_cov)
-        
