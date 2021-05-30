@@ -37,6 +37,9 @@ class InputFuzzer():
         self.operator_size = len(self.list_mut_opr)
         self.max_one_mutate = max_one_mutate
 
+    def reinit(self, init_seed, max_one_mutate=3):
+        self.__init__(init_seed, max_one_mutate)
+
     def mutate(self, input, operator, ntimes):
         ret = input
         for _ in range(ntimes):

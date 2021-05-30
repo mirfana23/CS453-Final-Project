@@ -5,6 +5,9 @@ REGEX_COV_REPORT = "([Tt][Oo][Tt][Aa][Ll])\s+(\d+)\s+(\d+)\s+(\d+)%"
 COMPILED_REGEX_COV_REPORT = re.compile(REGEX_COV_REPORT)
 
 class ScriptRunner():
+    FAIL = 1
+    PASS = 0
+
     def __init__(self, target_name):
         self.target = target_name
         self.total_cov = 0.0
@@ -19,7 +22,9 @@ class ScriptRunner():
         for inp_arg in args:
             run_target_cmd.append(inp_arg)
         run_res = subprocess.run(run_target_cmd, capture_output=True, text=True)
-        return run_res.returncode
+        if run_res.returncode != 0:
+            return self.FAIL
+        return self.PASS
         
     def check_cov(self):
         check_res = subprocess.run(self.check_cov_cmd, capture_output=True, text=True)
@@ -28,11 +33,11 @@ class ScriptRunner():
             new_cov = float(parse_cov[0][3])
             if new_cov > self.total_cov:
                 self.total_cov = new_cov
-                return True
-        return False
+                return (True, self.total_cov)
+        return (False, self.total_cov)
 
     def run_check(self, args=[]):
         ret_code = self.run(args)
-        ret_cov = self.check_cov()
-        return (ret_code, ret_cov)
+        (ret_cov, total_cov) = self.check_cov()
+        return (ret_code, ret_cov, total_cov)
         
