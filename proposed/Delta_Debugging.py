@@ -1,62 +1,5 @@
-import fuzzingbook_utils
 from Fuzzer import RandomFuzzer, Runner
-import re
 
-def quicksort(numbers, low, high):
-    i = low
-    j = high
-    pivot = numbers[int(low + (high-low)/2)]
-    while i <= j:
-        while numbers[i] < pivot:
-            i+= 1
-        while numbers[j] > pivot:
-            j -= 1
-        if i <= j:
-            exchange(numbers, i, j)
-        i += 1
-        j -= 1
-    if low < j:
-        quicksort(numbers, low, j)
-    if i < high:
-        quicksort(numbers, i, high)
-
-
-def exchange(numbers, i, j):
-    temp = numbers[i]
-    numbers[i] = numbers[j]
-    numbers[j] = temp
-
-class MysteryRunner(Runner):
-    def run(self, inp):
-        inp_list = list(inp.strip())
-        quicksort(inp_list, 0, len(inp)-1)
-        
-        if inp_list == sorted(inp):
-            return (inp, Runner.PASS)
-        else:
-            return (inp, Runner.FAIL)
-        
-
-import random
-
-mystery = MysteryRunner()
-random_fuzzer = RandomFuzzer()
-random.seed(random.random())
-counter = 0
-results = []
-
-while True:
-    inp = '48956598643725345'
-    result, outcome = mystery.run(inp)
-    if outcome == mystery.FAIL:
-        results.append(result)
-        counter += 1
-        if counter == 1:
-            break
-
-failing_input = results[0]
-print('fail-inducing input: ', failing_input)
-print('-------------------------------------------------------------------------------------------------------------------------------------------')
 
 class Reducer(object):
     def __init__(self, runner, log_test=False):
@@ -122,7 +65,3 @@ class DeltaDebuggingReducer(CachingReducer):
                 n = min(n * 2, len(inp))
 
         return inp
-
-dd_reducer = DeltaDebuggingReducer(mystery, log_test=True)
-
-print(dd_reducer.reduce(failing_input))
