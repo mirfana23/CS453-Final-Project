@@ -30,7 +30,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Proposed Fuzzer')
     parser.add_argument('-t', '--target', type=str, required=True)
     parser.add_argument('-r', '--reference', type=str, required=True)
-    parser.add_argument('-s', '--save_dir', type=str, required=True)
 
     args = parser.parse_args()
 
@@ -38,26 +37,52 @@ if __name__ == '__main__':
     ref_program = args.reference
 
     #accessing false and true program and build the runner
+    # class MysteryRunner(Runner):
+    #     def run(self, inp):
+    #         inp_list = list(inp.strip())
+    #         for i in range(0, len(inp_list)):
+    #             inp_list[i] = int(inp_list[i])
+    #         false_cmd = "python3 %s %s" %(target_program, '"' + str(inp_list) + '"')
+    #         falseres = subprocess.check_output(false_cmd, text=True)
+    #         true_cmd = "python3 %s %s" %(ref_program, '"' + str(inp_list) + '"')
+    #         trueres = subprocess.check_output(true_cmd,  text=True)
+    #         if falseres == trueres:
+    #             return inp, Runner.PASS
+    #         else:
+    #             return inp, Runner.FAIL
+    # mystery = MysteryRunner()
+
     class MysteryRunner(Runner):
         def run(self, inp):
-            inp_list = list(inp.strip())
-            for i in range(0, len(inp_list)):
-                inp_list[i] = int(inp_list[i])
-            false_cmd = "python3 %s %s" %(target_program, '"' + str(inp_list) + '"')
+            false_cmd = "python3 %s %s" %(target_program, inp)
             falseres = subprocess.check_output(false_cmd, text=True)
-            true_cmd = "python3 %s %s" %(ref_program, '"' + str(inp_list) + '"')
+            true_cmd = "python3 %s %s" %(ref_program, '"' + inp)
             trueres = subprocess.check_output(true_cmd,  text=True)
-            if falseres == trueres:
+            if '1' in falseres:
                 return inp, Runner.PASS
             else:
                 return inp, Runner.FAIL
     mystery = MysteryRunner()
 
+    # class MysteryRunner(Runner):
+    #     def run(self, inp):
+    #         false_cmd = "python3 %s %s" %(target_program, inp)
+    #         falseres = subprocess.check_output(false_cmd, text=True)
+    #         true_cmd = "python3 %s %s" %(ref_program, inp)
+    #         trueres = subprocess.check_output(true_cmd,  text=True)
+    #         if falseres == trueres:
+    #             return inp, Runner.PASS
+    #         else:
+    #             return inp, Runner.FAIL
+    # mystery = MysteryRunner()
+
+
+
 
 
     current_time = time.time()
     #set fuzzer timer
-    timer = 300
+    timer = 60
 
     #fuzzing process
     while True:
@@ -78,10 +103,15 @@ if __name__ == '__main__':
 
 
     #save fault inducing output
+    import os
+
+    if not os.path.exists(target_program.split('/')[-1][:-3]):
+        os.makedirs(target_program.split('/')[-1][:-3])
+
     count = 0
     for i in queue:
-        save_file = target_program.split('/')[-1][:-3] + str(count) + '.txt'
-        f = open(args.save_dir + '/' + save_file, "a")
+        save_file = target_program.split('/')[-1][:-3] + '_' + str(count) + '.txt'
+        f = open(target_program.split('/')[-1][:-3] + '/' + save_file, "a")
         f.write(str(i) + '\n')
         count += 1
         f.close()
