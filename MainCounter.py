@@ -13,10 +13,11 @@ class MysteryRunner(Runner):
             inp_list = list(inp.strip())
             for i in range(0, len(inp_list)):
                 inp_list[i] = int(inp_list[i])
-            false_cmd = "python3 %s %s" %(target_program, '"' + str(inp_list) + '"')
-            falseres = subprocess.check_output(false_cmd, text=True)
+            false_cmd = "python3 %s %s" %(target_program, str(inp_list))
+            falseres = subprocess.check_output(false_cmd, text=True, shell=True)
+            print("=======")
             true_cmd = "python3 %s %s" %(ref_program, '"' + str(inp_list) + '"')
-            trueres = subprocess.check_output(true_cmd,  text=True)
+            trueres = subprocess.check_output(true_cmd, text=True, shell=True)
             if falseres == trueres:
                 return inp, Runner.PASS
             else:
@@ -39,6 +40,12 @@ if __name__ == "__main__":
 		sys.exit()
 	elif not os.path.isfile(target_program) or not target_program[-len(".py"):] == ".py":
 	    print("Target program %s not a python script" %(target_program))
+	if not os.path.exists(ref_program):
+		print("Target program %s does not exists" %(ref_program))
+		sys.exit()
+	elif not os.path.isfile(ref_program) or not ref_program[-len(".py"):] == ".py":
+	    print("Target program %s not a python script" %(ref_program))
+	
 	
 	dirbase = args.base_dir
 	dirprop = args.proposed_dir
@@ -47,16 +54,16 @@ if __name__ == "__main__":
 
 	# 2. access the fuzzer testcase
 	maindir = os.getcwd()
-	os.chdir(dirbase)
+	pathname = ""
 	for file in os.listdir(dirbase):
-		dirfile = open(file, 'r')
+		pathname = os.path.join(dirbase, file)
+		dirfile = open(pathname, 'r')
 		lines = dirfile.readlines()
 		content = "".join(lines)
 		base_seed.append(content.strip())
-	os.chdir(maindir)
-	os.chdir(dirprop)
 	for file in os.listdir(dirprop):
-		dirfile = open(file, 'r')
+		pathname = os.path.join(dirprop, file)
+		dirfile = open(pathname, 'r')
 		lines = dirfile.readlines()
 		content = "".join(lines)
 		proposed_seed.append(content.strip())
@@ -66,14 +73,19 @@ if __name__ == "__main__":
 
 	# 3. reduce the testcase
 	for test in base_seed:
+		print("aa")
 		result, outcome = mystery.run(test)
+		print("bb")
 		if(outcome == mystery.FAIL):
 			dd_reducer = DeltaDebuggingReducer(mystery, log_test=False)
 			ddres = dd_reducer.reduce(result)
 			pfires = fault_percentage(ddres, result)
 			base_pfi.append(pfires)
+	print("============")
 	for test in proposed_seed:
+		print("aa")
 		result, outcome = mystery.run(test)
+		print("bb")
 		if(outcome == mystery.FAIL):
 			dd_reducer = DeltaDebuggingReducer(mystery, log_test=False)
 			ddres = dd_reducer.reduce(result)
@@ -82,8 +94,8 @@ if __name__ == "__main__":
 	
 	
 	# 4. calculate and present the calculated pfi
-	base_avg_pfi = sum(base_pfi)/len(base_pfi)
-	prop_avg_pfi = sum(proposed_pfi)/len(proposed_pfi)
+	base_avg_pfi = 100*sum(base_pfi)/len(base_pfi)
+	prop_avg_pfi = 100*sum(proposed_pfi)/len(proposed_pfi)
 	print("Average percentage of fault inducing input (baseline fuzzer) : %.2f%%" %(base_avg_pfi))
 	print("Average percentage of fault inducing input (proposed fuzzer) : %.2f%%" %(prop_avg_pfi))
 	
